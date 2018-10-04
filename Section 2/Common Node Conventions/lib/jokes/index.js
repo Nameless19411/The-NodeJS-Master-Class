@@ -8,13 +8,13 @@
 
 
 // Dependencies
-var fs = require('fs');
+const fs = require('fs');
 
 // App object
-var jokes = {};
+const jokes = {};
 
 // Get all the jokes and return them to the user
-jokes.allJokes = function(){
+jokes.allJokes = () => {
 
     // Read the text file containing the jokes
     var fileContents = fs.readFileSync(__dirname+'/jokes.txt', 'utf8');
