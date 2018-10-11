@@ -1,18 +1,46 @@
 /*
-Primary file for the API
+  Primary file for the API
 */
 
 // Dependencies
 const http = require('http')
+const https = require('https')
 const url = require('url')
 const StringDecoder = require('string_decoder').StringDecoder
+const config = require('./config')
+const fs = require('fs')
 
-// The Server should response to all requests with a string
-const server = http.createServer((req, res) => {
-  
+// Instantiate the HTTP server
+const httpServer = http.createServer((req, res) => {
+  unifiedServer(req, res)
+})
+
+// Start the HTTP server
+httpServer.listen(config.httpPort, () => {
+  console.log(`The HTTP Server is listening on port ${config.httpPort} in ${config.envName} mode`)
+})
+
+// Instatiate the HTTPS server
+const httpsServerOptions = {
+  'key': fs.readFileSync('./https/key.pem'),
+  'cert': fs.readFileSync('./https/cert.pem')
+}
+
+const httpsServer = https.createServer(httpsServerOptions, (req, res) => {
+  unifiedServer(req, res)
+})
+
+// Start the HTTPS server
+httpsServer.listen(config.httpsPort, () => {
+  console.log(`The HTTPS Server is listening on port ${config.httpsPort} in ${config.envName} mode`)
+})
+
+// All the server logic for both the http and https server
+const unifiedServer = ((req, res) => {
+
   // Get the url and parse it
   const parsedUrl = url.parse(req.url, true)
-  
+    
   // Get the path
   const path = parsedUrl.pathname
   const trimmedPath = path.replace(/^\/+|\/+$/g,'')
@@ -33,7 +61,7 @@ const server = http.createServer((req, res) => {
   req.on('data', (data) => {
     buffer += decoder.write(data)
   })
-  
+
   req.on('end', () => {
     buffer += decoder.end()
 
@@ -61,17 +89,13 @@ const server = http.createServer((req, res) => {
       const payloadString = JSON.stringify(payload)
 
       // Return the response
+      res.setHeader('Content-Type', 'applicaiton/json')
       res.writeHead(statusCode)
       res.end(payloadString)
 
       console.log('Returning this response: ', statusCode, payloadString)
     })
   })
-})
-
-// Start the server, and have it listen on port 3000
-server.listen(3000, () => {
-  console.log('The Server is listening on port 3000 now')
 })
 
 // Define the handlers
